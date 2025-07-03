@@ -2,15 +2,21 @@
 **Last Updated:** 2025-06-26 — Semantic Segmentation is now supported (example code included)
 
 ---
-
 ## 1. Environment
-
 - ISA(Instruction Set Architecture) : AMD64(x86_64)
-- OS : Ubuntu 22.04 LTS, Ubuntu 24.04 LTS
+- OS : Ubuntu 24.04 LTS
 - Python Version: **3.8.X ~ 3.12.X supported**
 
----
+## Ubuntu 22.04 Compatibility
+By default, this project is configured to work on **Ubuntu 24.04 and above**.  
+If you're using **Ubuntu 22.04**, you must modify the following line in `GUI_Manager.py` to ensure compatibility with the correct native binary:
+```python
+# For Ubuntu 22.04 users:
+# sys.path.append(str(Path(__file__).resolve().parent / "bin_for_ubuntu22.04")) # Uncomment this line
+sys.path.append(str(Path(__file__).resolve().parent / "bin"))  # And comment out this line
+```
 
+---
 ## 2. Build System Set-up
 **1. Install Packages**
 - Open a terminal and run the following commands to install CMake, g++ compiler, Ninja Build System, and EGL Library.
@@ -33,7 +39,6 @@
   ```
 
 ---
-
 ## 3. Project Description
 
 This version of the AI-BMT Platform allows you to implement your submitter in **Python** by inheriting the provided abstract interface `bmt.AI_BMT_Interface`.  
@@ -43,7 +48,6 @@ You can directly modify the **`class SubmitterImplementation(bmt.AI_BMT_Interfac
 We also provide ONNX Runtime-based example scripts for **Classification**, **Object Detection**, and **Semantic Segmentation** in the `example/` folder.
 
 ---
-
 ## 4. Submitter Development Guide
 
 ### Required Interface
