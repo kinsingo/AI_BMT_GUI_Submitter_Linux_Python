@@ -7,15 +7,6 @@
 - OS : Ubuntu 24.04 LTS
 - Python Version: **3.8.X ~ 3.12.X supported**
 
-## Ubuntu 22.04 Compatibility
-By default, this project is configured to work on **Ubuntu 24.04 and above**.  
-If you're using **Ubuntu 22.04**, you must modify the following line in `GUI_Manager.py` to ensure compatibility with the correct native binary:
-```python
-# For Ubuntu 22.04 users:
-# sys.path.append(str(Path(__file__).resolve().parent / "bin_for_ubuntu22.04")) # Uncomment this line
-sys.path.append(str(Path(__file__).resolve().parent / "bin"))  # And comment out this line
-```
-
 ---
 ## 2. Build System Set-up
 **1. Install Packages**
@@ -85,4 +76,11 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
         data.benchmark_model = "ResNet-50"
         data.operating_system = "Windows 10"
         return data
+```
+
+## 5. Start BMT
+using following commands in `AI_BMT_GUI_Submitter_Linux_Python/` directory.
+```bash
+export LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH
+python main.py
 ```
