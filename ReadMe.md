@@ -4,7 +4,7 @@
 ---
 ## 1. Environment
 - ISA(Instruction Set Architecture) : AMD64(x86_64)
-- OS : Ubuntu 24.04 LTS
+- OS : Ubuntu 22.04 LTS, 24.04 LTS
 - Python Version: **3.8.X ~ 3.12.X supported**
 
 ---
