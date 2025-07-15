@@ -1,5 +1,5 @@
 # AI-BMT Platform — Python Submitter Interface
-**Last Updated:** 2025-06-26 — Semantic Segmentation is now supported (example code included)
+**Last Updated:** 2025-07-16
 
 ---
 ## 1. Environment

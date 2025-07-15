@@ -45,13 +45,12 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
 
         # HWC → CHW
         image = np.transpose(image, (2, 0, 1))  # (3, 640, 640)
-        return image.flatten().tolist()
-
+        return np.array(image, dtype=np.float32).reshape(1, 3, 640, 640)
+        
     def runInference(self, preprocessed_data_list):
         results = []
-        for i, preprocessed_data in enumerate(preprocessed_data_list):
-            input_tensor = np.array(preprocessed_data, dtype=np.float32).reshape(1, 3, 640, 640)
-            outputs = self.session.run([self.output_name], {self.input_name: input_tensor})
+        for _, preprocessed_data in enumerate(preprocessed_data_list):
+            outputs = self.session.run([self.output_name], {self.input_name: preprocessed_data})
             output_tensor = outputs[0] # shape : (1, 25200, 85) for YOLOv5, (1, 84, 8400) for Yolov5u, Yolov8, Yolov9, Yolo11, Yolo12, (1, 300, 6) for Yolov10
             result = bmt.BMTResult()
             result.objectDetectionResult = output_tensor.flatten().tolist()

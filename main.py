@@ -50,13 +50,12 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
 
         # Transpose to (C, H, W)
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
-        return image.flatten().tolist()
+        return np.array(image, dtype=np.float32).reshape(1, 3, 224, 224)
 
     def runInference(self, preprocessed_data_list):
         results = []
-        for i, preprocessed_data in enumerate(preprocessed_data_list):
-            input_tensor = np.array(preprocessed_data, dtype=np.float32).reshape(1, 3, 224, 224)
-            outputs = self.session.run([self.output_name], {self.input_name: input_tensor})
+        for _, preprocessed_data in enumerate(preprocessed_data_list):
+            outputs = self.session.run([self.output_name], {self.input_name: preprocessed_data})
             output_tensor = outputs[0]  # shape: (1, 1000)
             result = bmt.BMTResult()
             result.classProbabilities = output_tensor.flatten().tolist()
