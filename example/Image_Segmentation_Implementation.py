@@ -61,17 +61,29 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
         return np.array(chw, dtype=np.float32).reshape(1, 3, 520, 520)
 
     def runInference(self, preprocessed_data_list):
+        """
+        Perform inference and return a list of BMTResult.
+        
+        Expected: A list of BMTResult objects, each containing one of the following:
+        - 'classProbabilities': 1D float list or NumPy array (shape = [1000])
+        - 'objectDetectionResult': 1D float list or NumPy array, shape depends on YOLO model:
+            - YOLOv5:        [25200 × 85]
+            - YOLOv5u/8/9/11/12: [8400 × 84]
+            - YOLOv10:       [300 × 6]
+        - 'segmentationResult': 1D float list or NumPy array (shape = [21 × 520 × 520])
+
+        Do NOT pass multi-dimensional arrays. 
+        Use `.flatten()` or `.ravel()` to convert arrays to 1D before assignment.
+        """
         results = []
         for _, preprocessed_data in enumerate(preprocessed_data_list): 
             outputs = self.session.run([self.output_name], {self.input_name: preprocessed_data})
             output_tensor = outputs[0]  # shape: (1, 21, 520, 520)
             result = bmt.BMTResult()
-            result.segmentationResult = output_tensor.flatten().tolist()
+            result.segmentationResult = output_tensor.flatten()
             results.append(result)
         return results
        
 if __name__ == "__main__":
     interface = SubmitterImplementation()
-    model_path = current_dir / "Model" / "Segmentation" / "deeplabv3_mobilenet_v3_large_opset12.onnx"
-    model_path = model_path.as_posix()
-    ExecuteGUI(interface, model_path)
+    ExecuteGUI(interface)
