@@ -41,17 +41,25 @@
 submitter **must** subclass `bmt.AI_BMT_Interface` and implement the following methods:
 ```python
 class SubmitterImplementation(bmt.AI_BMT_Interface):
+
+    # Load and initialize your model here
     def initialize(self, model_path: str) -> None:
-        # Load and initialize your model here
 
+    # return the implemented interface task type. 
     def getInterfaceType(self) -> InterfaceType:
-        # return the implemented interface task type. 
 
-    def convertToPreprocessedDataForInference(self, image_path: str) -> VariantType:
-        # Perform image loading and preprocessing here
+    #  Vision tasks: preprocessing & inference
+    #  - preprocessVisionData: convert raw image file into model input format
+    #  - inferVision: run inference on preprocessed data and return results
+    def preprocessVisionData(self, image_path: str) -> VariantType:
+    def inferVision(self, data: List[VariantType]) -> List[BMTVisionResult]:
 
-    def runInference(self, data: List[VariantType]) -> List[BMTResult]:
-        # Perform inference and return results
+    # LLM tasks: preprocessing & inference
+    # - preprocessLLMData: convert raw input into model input format
+    # - inferLLM: run inference on preprocessed data and return results
+    def preprocessLLMData(self, llmData: LLMPreprocessedInput) -> VariantType:
+    def inferLLM(self, data: List[VariantType]) -> List[BMTLLMResult]:
+      
 ```
 
 ### Optional Interface
