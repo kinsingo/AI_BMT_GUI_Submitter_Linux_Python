@@ -2,10 +2,10 @@ import os
 import numpy as np
 import cv2
 import onnxruntime as ort
-from GUI_Mananger import ExecuteGUI, bmt, current_dir
+from GUI_Mananger import bmt
 
 # Define the interface class for Classification using ONNX
-class SubmitterImplementation(bmt.AI_BMT_Interface):
+class Classification_Implementation(bmt.AI_BMT_Interface):
     def __init__(self):
         super().__init__()
         self.session = None
@@ -15,8 +15,8 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
     def getOptionalData(self):
         optional = bmt.Optional_Data()
         optional.cpu_type = ""
-        optional.accelerator_type = ""  # e.g., "DeepX M1(NPU)"
-        optional.submitter = ""         # e.g., "DeepX"
+        optional.accelerator_type = ""  
+        optional.submitter = ""         
         optional.cpu_core_count = ""
         optional.cpu_ram_capacity = ""  # e.g., "32GB"
         optional.cooling = ""           # e.g., "Air"
@@ -26,7 +26,10 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
         optional.operating_system = ""
         return optional
 
-    def Initialize(self, model_path: str):
+    def getInterfaceType(self):
+        return bmt.InterfaceType.ImageClassification
+
+    def initialize(self, model_path: str):
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model not found: {model_path}")
 
@@ -35,12 +38,11 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
         self.output_name = self.session.get_outputs()[0].name
         return True
 
-    def convertToPreprocessedDataForInference(self, image_path: str):
+    def preprocessVisionData(self, image_path: str):
         image = cv2.imread(image_path)
         if image is None:
             raise FileNotFoundError(f"Image not found: {image_path}")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(image, (224, 224))
         image = image.astype(np.float32) / 255.0
 
         # Normalize
@@ -52,7 +54,7 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
         return np.array(image, dtype=np.float32).reshape(1, 3, 224, 224)
 
-    def runInference(self, preprocessed_data_list):
+    def inferVision(self, preprocessed_data_list):
         """
         Perform inference and return a list of BMTResult.
         
@@ -71,11 +73,38 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
         for _, preprocessed_data in enumerate(preprocessed_data_list):
             outputs = self.session.run([self.output_name], {self.input_name: preprocessed_data})
             output_tensor = outputs[0]  # shape: (1, 1000)
-            result = bmt.BMTResult()
+            result = bmt.BMTVisionResult()
             result.classProbabilities = output_tensor.flatten()
             results.append(result)
         return results
+    
+    
+class Classification_CustomDataset_Implementation(Classification_Implementation):
+    def getInterfaceType(self):
+        return bmt.InterfaceType.ImageClassification_CustomDataset
 
-if __name__ == "__main__":
-    interface = SubmitterImplementation()
-    ExecuteGUI(interface)
+    def getResizedAndCenterCroppedImage(self, image):
+        # Resize to 232x232 using bilinear interpolation
+        image = cv2.resize(image, (232, 232), interpolation=cv2.INTER_LINEAR)
+        # Center crop to 224x224
+        h, w, _ = image.shape
+        top = (h - 224) // 2
+        left = (w - 224) // 2
+        return image[top:top+224, left:left+224]
+        
+    def preprocessVisionData(self, image_path: str):
+        image = cv2.imread(image_path)
+        if image is None:
+            raise FileNotFoundError(f"Image not found: {image_path}")
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = self.getResizedAndCenterCroppedImage(image)
+        image = image.astype(np.float32) / 255.0
+
+        # Normalize
+        mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+        std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+        image = (image - mean) / std
+
+        # Transpose to (C, H, W)
+        image = np.transpose(image, (2, 0, 1)).astype(np.float32)
+        return np.array(image, dtype=np.float32).reshape(1, 3, 224, 224)
