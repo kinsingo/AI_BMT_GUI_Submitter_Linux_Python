@@ -1,5 +1,5 @@
-# AI-BMT Platform — Python Submitter Interface
-**Last Updated:** 2025-08-03
+# AI-BMT Platform — Python Submitter Interface (Added LLM Tasks, Multi-Domain Tasks, and Custom Dataset Evaluation Modes)
+**Last Updated:** 2025-09-03 
 
 ---
 ## 1. Environment
@@ -31,12 +31,8 @@
 
 ---
 ## 3. Project Description
-
-This version of the AI-BMT Platform allows you to implement your submitter in **Python** by inheriting the provided abstract interface `bmt.AI_BMT_Interface`.  
-Once implemented, your model and preprocessing pipeline can be evaluated through the unified GUI interface, just like C++-based submitters.
-
-You can directly modify the **`class SubmitterImplementation(bmt.AI_BMT_Interface)`** in `main.py`.  
-We also provide ONNX Runtime-based example scripts for **Classification**, **Object Detection**, and **Semantic Segmentation** in the `example/` folder.
+1. Implement AI_BMT_Interface to operate with the intended AI Processing Unit (e.g., CPU, GPU, NPU).
+2. Various task example codes are provided. Use these example codes as a reference to implement the interface for the AI Processing Unit.
 
 ---
 ## 4. Submitter Development Guide
@@ -45,17 +41,17 @@ We also provide ONNX Runtime-based example scripts for **Classification**, **Obj
 submitter **must** subclass `bmt.AI_BMT_Interface` and implement the following methods:
 ```python
 class SubmitterImplementation(bmt.AI_BMT_Interface):
-    def Initialize(self, model_path: str) -> None:
+    def initialize(self, model_path: str) -> None:
         # Load and initialize your model here
-        ...
+
+    def getInterfaceType(self) -> InterfaceType:
+        # return the implemented interface task type. 
 
     def convertToPreprocessedDataForInference(self, image_path: str) -> VariantType:
         # Perform image loading and preprocessing here
-        ...
 
     def runInference(self, data: List[VariantType]) -> List[BMTResult]:
         # Perform inference and return results
-        ...
 ```
 
 ### Optional Interface
