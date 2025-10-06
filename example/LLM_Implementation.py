@@ -16,8 +16,8 @@ class LLM_Implementation(bmt.AI_BMT_Interface):
     def getOptionalData(self):
         optional = bmt.Optional_Data()
         optional.cpu_type = ""
-        optional.accelerator_type = ""   
-        optional.submitter = ""          
+        optional.accelerator_type = ""   # e.g., "DeepX M1(NPU)"
+        optional.submitter = ""          # e.g., "DeepX"
         optional.cpu_core_count = ""
         optional.cpu_ram_capacity = ""   # e.g., "32GB"
         optional.cooling = ""            # e.g., "Air"
@@ -28,17 +28,26 @@ class LLM_Implementation(bmt.AI_BMT_Interface):
         return optional
     
     def getInterfaceType(self):
-        return bmt.InterfaceType.LLM
+        #return bmt.InterfaceType.LLM_GPT2_MMLU
+        return bmt.InterfaceType.LLM_OPT_MMLU
+        #return bmt.InterfaceType.LLM_QWEN_MMLU
+        #return bmt.InterfaceType.LLM_GPT2_Hellaswag  # e.g., GPT2-based model for Hellaswag
+        #return bmt.InterfaceType.LLM_OPT_Hellaswag  # e.g., OPT-based model for Hellaswag
+        #return bmt.InterfaceType.LLM_QWEN_Hellaswag  # e.g., Qwen-based model for Hellaswag
+        #return bmt.InterfaceType.LLM_Bert_GLUE  # e.g., BERT-based model for GLUE tasks
 
     def initialize(self, model_path: str):
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model not found: {model_path}")
 
+        # 필요시 CUDA 등으로 교체 가능: ['CUDAExecutionProvider','CPUExecutionProvider']
         self.session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
 
+        # 입력/출력 이름 수집 (C++와 동일하게 전체 수집)
         self.input_names  = [i.name for i in self.session.get_inputs()]
         self.output_names = [o.name for o in self.session.get_outputs()]
 
+        # 입력 시그니처 검사
         self.modelHasTokenType = ("token_type_ids"  in self.input_names)
         self.modelHasAttnMask  = ("attention_mask" in self.input_names)
         return True
@@ -47,21 +56,19 @@ class LLM_Implementation(bmt.AI_BMT_Interface):
         """
         llmData: bmt.LLMPreprocessedInput (fields: input_ids, attention_mask, token_type_ids)
         """
-        S = len(llmData.input_ids)
+        size = len(llmData.input_ids)
         if self.modelHasAttnMask:
-            if len(llmData.attention_mask) != S:
-                llmData.attention_mask = [1] * S
+            if len(llmData.attention_mask) != size:
+                llmData.attention_mask = [1] * size
         if self.modelHasTokenType:
-            if len(llmData.token_type_ids) != S:
-                llmData.token_type_ids = [0] * S
-        return llmData
+            if len(llmData.token_type_ids) != size:
+                llmData.token_type_ids = [0] * size
+        return llmData  # VariantType으로 그대로 전달
 
     def inferLLM(self, preprocessed_data_list):
         results: list[bmt.BMTLLMResult] = []
         for preprocessed_data in preprocessed_data_list:
-            S = len(preprocessed_data.input_ids)
-            shape = (1, S)
-
+            shape = (preprocessed_data.N, preprocessed_data.S)
             feed: dict[str, np.ndarray] = {}
             for nm in self.input_names:
                 if nm == "input_ids":
