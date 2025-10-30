@@ -1,11 +1,11 @@
-# AI-BMT Platform — Python Submitter Interface (Added HellaSwag, MMLU LLM Tasks)
-**Last Updated:** 2025-10-06 
+# AI-BMT Platform — Python Submitter Interface
+**Last Updated:** 2025-10-31
 
 ---
 ## 1. Environment
 - ISA(Instruction Set Architecture) : AMD64(x86_64)
 - OS : Ubuntu 22.04 LTS, 24.04 LTS
-- Python Version: **3.8.X ~ 3.12.X supported**
+- Python Version: **3.8.X ~ 3.13.X supported**
 
 ---
 ## 2. Build System Set-up
@@ -50,15 +50,19 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
 
     #  Vision tasks: preprocessing & inference
     #  - preprocessVisionData: convert raw image file into model input format
-    #  - inferVision: run inference on preprocessed data and return results
+    #  - inferVision: run inference on preprocessed data and return vision model outputs
+    #  - dataTransferVision : transfer vision model outputs to BMT result format
     def preprocessVisionData(self, image_path: str) -> VariantType:
-    def inferVision(self, data: List[VariantType]) -> List[BMTVisionResult]:
+    def inferVision(self, data: List[VariantType]) -> model_outputs:
+    def dataTransferVision(self, model_outputs) -> List[BMTVisionResult]:
 
     # LLM tasks: preprocessing & inference
     # - preprocessLLMData: convert raw input into model input format
-    # - inferLLM: run inference on preprocessed data and return results
+    # - inferLLM: run inference on preprocessed data and return LLM model outputs
+    # - dataTransferLLM : transfer LLM model outputs to BMT result format
     def preprocessLLMData(self, llmData: LLMPreprocessedInput) -> VariantType:
-    def inferLLM(self, data: List[VariantType]) -> List[BMTLLMResult]:
+    def inferLLM(self, data: List[VariantType]) -> model_outputs:
+    def dataTransferLLM(self, model_outputs) -> List[BMTLLMResult]: 
       
 ```
 

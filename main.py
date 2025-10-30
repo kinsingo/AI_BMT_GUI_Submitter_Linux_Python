@@ -10,15 +10,14 @@ from example.ObjectDetection_Implementation import ObjectDetection_Implementatio
 from example.LLM_Implementation import LLM_Implementation
 
 if __name__ == "__main__":
-    
     # -- For Single Task --
-    # interface = Classification_Implementation() 
+    interface = Classification_Implementation() 
     #interface = Classification_CustomDataset_Implementation() 
     #interface = ObjectDetection_Implementation()
     #interface = ObjectDetection_CustomDataset_Implementation()
     #interface = Segmentation_Implementation() 
     #interface = Segmentation_CustomDataset_Implementation()
-    interface = LLM_Implementation() 
+    #interface = LLM_Implementation() 
     ExecuteGUI(interface)
 
     # -- For Multi-Domain Tasks --
