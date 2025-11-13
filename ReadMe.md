@@ -16,7 +16,7 @@
   sudo apt install cmake                     # CMake
   sudo apt install build-essential           # GCC, G++, Make
   sudo apt-get install ninja-build           # Ninja
-  sudo apt install libgl1 libgl1-mesa-dev    # EGL and OpenGL
+  sudo apt install libgl1 libgl1-mesa-dev libxcb-cursor0 libxkbcommon-x11-0 libxcb-xinerama0  # EGL and OpenGL
   sudo apt install unzip                     # unzip
   ```
 
