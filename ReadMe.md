@@ -1,4 +1,4 @@
-> **Last Updated:** 2025-12-06 (Version 2.1)
+> **Last Updated:** 2025-12-23 (Version 2.1)
 ---
 ## 1. Environment
 - ISA(Instruction Set Architecture) : AMD64(x86_64)
@@ -26,6 +26,30 @@
   ninja --version
   dpkg -l | grep -E 'libgl1|libgl1-mesa-dev'
   ```
+
+**3. Hugging Face Authentication (for LLM tasks)**
+If you're using Hugging Face models (especially gated models like Llama), you need to authenticate:
+
+1. **Get Hugging Face Token:**
+
+   - Visit https://huggingface.co/settings/tokens
+   - Create a new token with "Read" permission
+   - Copy the token
+
+2. **Login via CLI:**
+
+   ```bash
+   python -m huggingface_hub.commands.huggingface_cli login
+   ```
+
+   Enter your token when prompted.
+
+3. **Access Gated Models:**
+   - For gated models (e.g., Llama), visit the model page
+   - Example: https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct
+   - Click "Agree and access repository" to accept terms
+
+**Note:** Without authentication, you'll see `hf_token:None` error when loading gated models.
 
 ---
 ## 3. Project Description
@@ -61,6 +85,12 @@ class SubmitterImplementation(bmt.AI_BMT_Interface):
     def preprocessLLMData(self, llmData: LLMPreprocessedInput) -> VariantType:
     def inferLLM(self, data: List[VariantType]) -> model_outputs:
     def dataTransferLLM(self, model_outputs) -> List[BMTLLMResult]: 
+
+    # LLM MMLU tasks: first token generation for TTFT measurement
+    # - inferFirstToken: generate only the first token (AI-BMT will measure the time internally)
+    # - Returns None (we only measure TTFT, don't care about the actual first token output)
+    # - Only used for MMLU tasks that require TTFT measurement
+    def inferFirstToken(self, preprocessed_data) -> None:
       
 ```
 

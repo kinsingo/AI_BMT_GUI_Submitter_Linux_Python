@@ -3,9 +3,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from GUI_Mananger import bmt
-
-# Set Hugging Face token
-os.environ["HF_TOKEN"] = ""
+from huggingface_hub import HfFolder
 
 # LLM Submitter for Hugging Face (BERT for GLUE)
 class LLM_Implementation_HuggingFace_Bert(bmt.AI_BMT_Interface):
@@ -13,7 +11,10 @@ class LLM_Implementation_HuggingFace_Bert(bmt.AI_BMT_Interface):
         super().__init__()
         self.model = None
         self.tokenizer = None
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu"
+        #self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.hf_token = HfFolder.get_token()  # 현재 로그인된 토큰
+        print(f"hf_token:{self.hf_token}")
 
     def getOptionalData(self):
         optional = bmt.Optional_Data()
@@ -37,18 +38,18 @@ class LLM_Implementation_HuggingFace_Bert(bmt.AI_BMT_Interface):
             print(f"Loading model from: {model_path}")
             # Load model and tokenizer from Hugging Face
             self.tokenizer = AutoTokenizer.from_pretrained(
-                model_path, 
+                model_path,
                 trust_remote_code=True,
-                token=os.environ.get("HF_TOKEN")
+                token=self.hf_token,
             )
             print("Tokenizer loaded successfully")
             
             # BERT uses SequenceClassification for GLUE tasks
             self.model = AutoModelForSequenceClassification.from_pretrained(
-                model_path, 
+                model_path,
                 trust_remote_code=True,
                 dtype=torch.float32,
-                token=os.environ.get("HF_TOKEN")
+                token=self.hf_token,
             )
             print("Model loaded successfully")
             

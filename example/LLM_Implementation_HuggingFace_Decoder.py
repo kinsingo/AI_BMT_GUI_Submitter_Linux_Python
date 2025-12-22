@@ -3,9 +3,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from GUI_Mananger import bmt
-
-# Set Hugging Face token
-os.environ["HF_TOKEN"] = ""
+from huggingface_hub import HfFolder
 
 # LLM Submitter for Hugging Face (Decoder-only models)
 class LLM_Implementation_HuggingFace_Decoder(bmt.AI_BMT_Interface):
@@ -13,7 +11,10 @@ class LLM_Implementation_HuggingFace_Decoder(bmt.AI_BMT_Interface):
         super().__init__()
         self.model = None
         self.tokenizer = None
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu"
+        #self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.hf_token = HfFolder.get_token()  # 현재 로그인된 토큰
+        print(f"hf_token:{self.hf_token}")
 
     def getOptionalData(self):
         optional = bmt.Optional_Data()
@@ -30,12 +31,9 @@ class LLM_Implementation_HuggingFace_Decoder(bmt.AI_BMT_Interface):
         return optional
     
     def getInterfaceType(self):
-        return bmt.InterfaceType.LLM_QWEN_Hellaswag
-        # return bmt.InterfaceType.LLM_Gemma_Hellaswag #Ok
-        # return bmt.InterfaceType.LLM_Llama_Hellaswag #Ok
         # return bmt.InterfaceType.LLM_QWEN_MMLU
         # return bmt.InterfaceType.LLM_Gemma_MMLU #26.6667
-        # return bmt.InterfaceType.LLM_Llama_MMLU #50 Ok
+        return bmt.InterfaceType.LLM_Llama_MMLU #50 Ok
         
 
     def initialize(self, model_path: str):
@@ -43,17 +41,17 @@ class LLM_Implementation_HuggingFace_Decoder(bmt.AI_BMT_Interface):
             print(f"Loading model from: {model_path}")
             # Load model and tokenizer from Hugging Face
             self.tokenizer = AutoTokenizer.from_pretrained(
-                model_path, 
+                model_path,
                 trust_remote_code=True,
-                token=os.environ.get("HF_TOKEN")
+                token=self.hf_token,
             )
             print("Tokenizer loaded successfully")
             
             self.model = AutoModelForCausalLM.from_pretrained(
-                model_path, 
+                model_path,
                 trust_remote_code=True,
                 dtype=torch.float32,
-                token=os.environ.get("HF_TOKEN")
+                token=self.hf_token,
             )
             print("Model loaded successfully")
             
@@ -80,6 +78,43 @@ class LLM_Implementation_HuggingFace_Decoder(bmt.AI_BMT_Interface):
         Preprocessing for Hugging Face model - return as is
         """
         return llmData
+    
+    def inferFirstToken(self, preprocessed_data):
+        """
+        MMLU TTFT measurement: generate only the first token
+        This method is called by C++ to measure Time To First Token (TTFT).
+        The timing is measured in C++ (GlobalTimer), so we just perform inference.
+        Returns nothing (void in C++) - we only measure time, not the token itself.
+        
+        Uses model.generate() with max_new_tokens=1 to actually generate the first new token
+        in an autoregressive manner (not just forward pass).
+        """
+        print("inferFirstToken is called for TTFT measurement..")
+        
+        if self.model is None:
+            raise RuntimeError("Model is not loaded. Please call initialize() first.")
+        
+        with torch.no_grad():
+            # Create input tensors
+            input_ids = torch.tensor(preprocessed_data.input_ids, dtype=torch.long).reshape(
+                preprocessed_data.N, preprocessed_data.S
+            ).to(self.device)
+            
+            attention_mask = torch.tensor(preprocessed_data.attention_mask, dtype=torch.long).reshape(
+                preprocessed_data.N, preprocessed_data.S
+            ).to(self.device)
+            
+            # Generate only the first new token (autoregressive generation)
+            # This measures the actual TTFT in autoregressive decoding
+            # C++ measures the time, we don't return anything
+            _ = self.model.generate(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                max_new_tokens=1,  # Generate only 1 new token
+                do_sample=False,   # Deterministic (greedy decoding)
+                pad_token_id=self.tokenizer.pad_token_id
+            )
+            # Result is discarded - C++ only measures TTFT timing
 
     def inferLLM(self, preprocessed_data_list):
         """
